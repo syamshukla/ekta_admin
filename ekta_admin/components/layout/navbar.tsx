@@ -27,6 +27,17 @@ export default function Navbar() {
               Beta
             </Badge>
           </Link>
+          <Link href="/dashboard" className="flex items-center">
+            <span className="overflow-auto  leading-tight ">
+              Client Dashboard
+            </span>
+          </Link>
+          <Link href="/costumes" className="flex items-center">
+            <span className="overflow-auto  leading-tight ">Costumes</span>
+          </Link>
+          <Link href="/providers" className="flex items-center">
+            <span className="overflow-auto  leading-tight ">Providers</span>
+          </Link>
         </div>
         <ModeToggle />
       </nav>
