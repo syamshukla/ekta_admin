@@ -15,6 +15,7 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
+import { Checkbox } from "./ui/checkbox";
 
 interface NewOrderModalProps {
   isOpen: boolean;
@@ -33,6 +34,7 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
     client_name: "",
     client_id: "",
     date: "",
+    description: "",
     item_name: "",
     fabric_source: "",
     fabric_meters: "",
@@ -51,7 +53,8 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
   }, [client_id]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value, type, checked } = event.target;
+    const { name, type, checked, value } = event.target;
+
     setNewOrder((prev) => ({
       ...prev,
       [name]: type === "checkbox" ? checked : value,
@@ -64,7 +67,14 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
       tailor_name: value,
     }));
   };
+  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = event.target;
 
+    setNewOrder((prev) => ({
+      ...prev,
+      [name]: checked,
+    }));
+  };
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     onSubmit(newOrder);
@@ -72,6 +82,7 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
       client_name: "",
       client_id: "",
       date: "",
+      description: "",
       item_name: "",
       fabric_source: "",
       fabric_meters: "",
@@ -218,13 +229,37 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
               <Label htmlFor="additional_embellishment" className="text-right">
                 Additional Embellishment
               </Label>
-              <Input
+              {/* <Input
                 id="additional_embellishment"
                 name="additional_embellishment"
                 type="checkbox"
                 checked={newOrder.additional_embellishment}
                 onChange={handleChange}
-                className="col-span-3"
+                className="col-s
+                pan-3"
+              /> */}
+              <Checkbox
+                id="additional_embellishment"
+                name="additional_embellishment"
+                checked={newOrder.additional_embellishment}
+                onCheckedChange={(checked) =>
+                  handleCheckboxChange({
+                    target: {
+                      name: "additional_embellishment",
+                      checked: checked,
+                    },
+                  } as React.ChangeEvent<HTMLInputElement>)
+                }
+                className="cursor-pointer"
+              />
+              <Input
+                id="description"
+                type="text"
+                className="col-span-4"
+                name="description"
+                placeholder="Description"
+                value={newOrder.description || ""}
+                onChange={handleChange}
               />
             </div>
           </div>

@@ -9,7 +9,10 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { ChangeEvent } from "react";
-//@ts-ignore
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Card, CardContent } from "@/components/ui/card";
+
+// @ts-ignore
 import type { Client } from "@/app/page";
 
 type ClientListProps = {
@@ -36,97 +39,127 @@ export default function ClientList({
   handleNewClientSubmit,
 }: ClientListProps) {
   return (
-    <div>
-      <div className="mb-4 p-3 flex justify-center flex-col items-center">
-        <h2 className="text-lg font-semibold">Point of Contacts</h2>
-        <Button variant="outline" onClick={() => setIsNewClientModalOpen(true)}>
-          Add New POC
-        </Button>
-      </div>
-      <ul className="space-y-2">
-        {clients && clients.length > 0 ? (
-          clients.map((client) => (
-            <li
-              key={client.id}
-              className={`p-4 rounded-md cursor-pointer ${
-                selectedClient?.id === client.id
-                  ? "bg-primary text-primary-foreground"
-                  : "bg-background text-muted-foreground"
-              }`}
-              onClick={() => onSelect(client)}
-            >
-              {client.client_name} - {client.location_of_event}
-            </li>
-          ))
-        ) : (
-          <li className="p-4 rounded-md">No clients available</li>
-        )}
-      </ul>
+    <Card className="w-full max-w-md mx-auto">
+      <CardContent className="p-6">
+        <div className="flex flex-col items-center justify-between mb-6">
+          <h2 className="text-2xl font-semibold mb-4">Point of Contacts</h2>
+          <Button
+            variant="outline"
+            onClick={() => setIsNewClientModalOpen(true)}
+          >
+            Add New POC
+          </Button>
+        </div>
+        <ScrollArea className="h-[300px] w-full rounded-md ">
+          {clients && clients.length > 0 ? (
+            <ul className="space-y-2">
+              {clients.map((client) => (
+                <li key={client.id}>
+                  <Button
+                    variant="ghost"
+                    className={`w-full justify-start text-left ${
+                      selectedClient?.id === client.id
+                        ? "bg-primary text-primary-foreground"
+                        : ""
+                    }`}
+                    onClick={() => onSelect(client)}
+                  >
+                    <span className="truncate">
+                      {client.client_name} - {client.location_of_event}
+                    </span>
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <p className="text-center text-muted-foreground">
+              No clients available
+            </p>
+          )}
+        </ScrollArea>
+      </CardContent>
 
-      {/* Dialog for adding a new client */}
       <Dialog
         open={isNewClientModalOpen}
-        onOpenChange={(open) => setIsNewClientModalOpen(open)}
+        onOpenChange={setIsNewClientModalOpen}
       >
-        <DialogContent>
+        <DialogContent className="sm:max-w-[425px]">
           <DialogHeader>
             <DialogTitle>Add New POC</DialogTitle>
           </DialogHeader>
-          <div className="grid gap-4">
-            <div>
-              <Label htmlFor="name">Name</Label>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="name" className="text-right">
+                Name
+              </Label>
               <Input
                 id="name"
                 name="name"
                 value={newClient?.name ?? ""}
                 onChange={handleNewClientChange}
+                className="col-span-3"
               />
             </div>
-            <div>
-              <Label htmlFor="phone">Phone</Label>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="phone" className="text-right">
+                Phone
+              </Label>
               <Input
                 id="phone"
                 name="phone"
                 value={newClient?.phone ?? ""}
                 onChange={handleNewClientChange}
+                className="col-span-3"
               />
             </div>
-            <div>
-              <Label htmlFor="address">Address</Label>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="address" className="text-right">
+                Address
+              </Label>
               <Input
                 id="address"
                 name="address"
                 value={newClient?.address ?? ""}
                 onChange={handleNewClientChange}
+                className="col-span-3"
               />
             </div>
-            <div>
-              <Label htmlFor="eventDate">Event Date</Label>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="eventDate" className="text-right">
+                Event Date
+              </Label>
               <Input
                 id="eventDate"
                 name="eventDate"
                 type="date"
                 value={newClient?.eventDate ?? ""}
                 onChange={handleNewClientChange}
+                className="col-span-3"
               />
             </div>
-            <div>
-              <Label htmlFor="shipmentDate">Shipment Date</Label>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="shipmentDate" className="text-right">
+                Shipment Date
+              </Label>
               <Input
                 id="shipmentDate"
                 name="shipmentDate"
                 type="date"
                 value={newClient?.shipmentDate ?? ""}
                 onChange={handleNewClientChange}
+                className="col-span-3"
               />
             </div>
-            <div>
-              <Label htmlFor="eventLocation">Event Location</Label>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="eventLocation" className="text-right">
+                Event Location
+              </Label>
               <Input
                 id="eventLocation"
                 name="eventLocation"
                 value={newClient?.eventLocation ?? ""}
                 onChange={handleNewClientChange}
+                className="col-span-3"
               />
             </div>
           </div>
@@ -135,6 +168,6 @@ export default function ClientList({
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </Card>
   );
 }

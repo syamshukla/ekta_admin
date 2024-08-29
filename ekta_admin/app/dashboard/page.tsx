@@ -5,6 +5,8 @@ import ClientList from "@/components/client-list";
 import { Button } from "@/components/ui/button";
 import NewClientModal from "@/components/new-client-modal";
 import NewOrderModal from "@/components/new-order-modal";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 interface Client {
   id: any;
@@ -24,14 +26,15 @@ interface Order {
   id: string;
   date: string;
   item_name: string;
-  total_cost: string; // INR as string
+  total_cost: string;
   fabric_meters: number;
-  cost_per_meter: string; // INR as string
-  stitching_cost: string; // INR as string
-  embellishment_cost: string; // INR as string
+  cost_per_meter: string;
+  stitching_cost: string;
+  embellishment_cost: string;
   tailor_name: string;
   fabric_source: string;
   additional_embellishment: boolean;
+  description: string;
 }
 
 interface ClientData {
@@ -55,7 +58,6 @@ function ClientManagementPage() {
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [newClient, setNewClient] = useState<Partial<Client>>({});
 
-  // Fetch clients from the API when the component mounts
   useEffect(() => {
     async function fetchClients() {
       try {
@@ -90,7 +92,7 @@ function ClientManagementPage() {
       }
 
       const newClient = await response.json();
-      setClients((prev) => [...prev, newClient]); // Update with new client
+      setClients((prev) => [...prev, newClient]);
       setIsNewClientModalOpen(false);
     } catch (error) {
       console.error("Error adding new client:", error);
@@ -163,110 +165,95 @@ function ClientManagementPage() {
           isNewClientModalOpen={isNewClientModalOpen}
         />
       </div>
-      <div className="w-full p-4 overflow-y-auto">
-        {selectedClient && (
-          <div>
-            <h2 className="text-2xl font-bold mb-6">
-              Orders for {selectedClient.client_name}
-            </h2>
-            {selectedClient.orders && selectedClient.orders.length > 0 ? (
-              <div className="flex flex-col m-1 w-full">
-                {selectedClient.orders.map((order) => (
-                  <div
-                    key={order.id}
-                    className="bg-card border-2 w-2/3 rounded-lg m-2 shadow-lg overflow-hidden p-6"
-                  >
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-3xl font-medium">{order.name}</span>
-                      <span className="text-muted-foreground text-sm">
-                        {order.item_name}
-                      </span>
-                      <span className="text-muted-foreground text-sm">
-                        {order.date}
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <p className="text-muted-foreground">Total Cost</p>
-                        <p className="text-lg font-medium">
-                          ₹{order.total_cost} (${convertToUSD(order.total_cost)}
-                          )
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Fabric Meters</p>
-                        <p className="text-lg font-medium">
-                          {order.fabric_meters}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Cost per Meter</p>
-                        <p className="text-lg font-medium">
-                          ₹{order.cost_per_meter} ($
-                          {convertToUSD(order.cost_per_meter)})
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Stitching Cost</p>
-                        <p className="text-lg font-medium">
-                          ₹{order.stitching_cost} ($
-                          {convertToUSD(order.stitching_cost)})
-                        </p>
-                      </div>
-                    </div>
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div>
-                        <p className="text-muted-foreground">
-                          Embellishment Cost
-                        </p>
-                        <p className="text-lg font-medium">
-                          ₹{order.embellishment_cost} ($
-                          {convertToUSD(order.embellishment_cost)})
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Tailor</p>
-                        <p className="text-lg font-medium">
-                          {order.tailor_name}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground">Fabric Source</p>
-                        <p className="text-lg font-medium">
-                          {order.fabric_source}
-                        </p>
-                      </div>
-                      {order.additional_embellishment && (
-                        <div>
-                          <p className="text-muted-foreground">
-                            Additional Embellishment
-                          </p>
-                          <p className="text-lg font-medium">Yes</p>
-                        </div>
-                      )}
-                    </div>
+      <div className="w-2/3 p-4">
+        <ScrollArea className="h-full">
+          {selectedClient && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Orders for {selectedClient.client_name}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {selectedClient.orders && selectedClient.orders.length > 0 ? (
+                  <div className="space-y-4">
+                    {selectedClient.orders.map((order) => (
+                      <Card key={order.id}>
+                        <CardHeader>
+                          <div className="flex justify-between items-center">
+                            <CardTitle>{order.name}</CardTitle>
+                            <div className="text-sm text-muted-foreground">
+                              {order.item_name} | {order.id}
+                            </div>
+                          </div>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="grid grid-cols-2 gap-4">
+                            <OrderDetail
+                              label="Total Cost"
+                              value={`₹${order.total_cost} ($${convertToUSD(
+                                order.total_cost
+                              )})`}
+                            />
+                            <OrderDetail
+                              label="Fabric Meters"
+                              value={order.fabric_meters.toString()}
+                            />
+                            <OrderDetail
+                              label="Cost per Meter"
+                              value={`₹${order.cost_per_meter} ($${convertToUSD(
+                                order.cost_per_meter
+                              )})`}
+                            />
+                            <OrderDetail
+                              label="Stitching Cost"
+                              value={`₹${order.stitching_cost} ($${convertToUSD(
+                                order.stitching_cost
+                              )})`}
+                            />
+                            <OrderDetail
+                              label="Embellishment Cost"
+                              value={`₹${
+                                order.embellishment_cost
+                              } ($${convertToUSD(order.embellishment_cost)})`}
+                            />
+                            <OrderDetail
+                              label="Tailor"
+                              value={order.tailor_name}
+                            />
+                            <OrderDetail
+                              label="Fabric Source"
+                              value={order.fabric_source}
+                            />
+                            {order.additional_embellishment && (
+                              <OrderDetail
+                                label="Additional Embellishment"
+                                value="Yes"
+                              />
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))}
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-muted-foreground">
-                No orders available for this client.
-              </p>
-            )}
-            <Button
-              className="mt-6"
-              onClick={() => setIsNewOrderModalOpen(true)}
-            >
-              Create New Order
-            </Button>
-          </div>
-        )}
+                ) : (
+                  <p className="text-muted-foreground">
+                    No orders available for this client.
+                  </p>
+                )}
+                <Button
+                  className="mt-4"
+                  onClick={() => setIsNewOrderModalOpen(true)}
+                >
+                  Create New Order
+                </Button>
+              </CardContent>
+            </Card>
+          )}
+        </ScrollArea>
       </div>
 
       <NewClientModal
         isOpen={isNewClientModalOpen}
         onClose={() => setIsNewClientModalOpen(false)}
-        //@ts-ignore
         onSubmit={async (clientData: ClientData) => {
           await handleNewClientSubmit(clientData);
         }}
@@ -278,6 +265,15 @@ function ClientManagementPage() {
         onSubmit={handleNewOrderSubmit}
         client_id={selectedClient?.client_id}
       />
+    </div>
+  );
+}
+
+function OrderDetail({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="text-sm text-muted-foreground">{label}</p>
+      <p className="text-lg font-medium">{value}</p>
     </div>
   );
 }
