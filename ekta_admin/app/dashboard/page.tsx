@@ -1,468 +1,285 @@
 "use client";
-import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
+
+import React, { useEffect, useState } from "react";
 import ClientList from "@/components/client-list";
-import {
-  Select,
-  SelectTrigger,
-  SelectContent,
-  SelectGroup,
-  SelectItem,
-  SelectValue,
-} from "@/components/ui/select";
+import { Button } from "@/components/ui/button";
+import NewClientModal from "@/components/new-client-modal";
+import NewOrderModal from "@/components/new-order-modal";
 
-type Order = {
-  id: string;
-  clientName: string;
-  garmentTitle: string;
-  tailorName: string;
-  fabricSource: string;
-  fabricMeters: number;
-  fabricCostPerMeter: number;
-  fabricCost: {
-    inr: number;
-    usd: number;
-  };
-  stitchingCost: {
-    inr: number;
-    usd: number;
-  };
-  padded: boolean;
-  kanKan: boolean;
-  embellishments: string;
-};
+interface Client {
+  id: any;
+  client_id: string;
+  client_name: string;
+  phone_number: string;
+  address: string;
+  date_needed: string;
+  date_of_event: string;
+  location_of_event: string;
+  shipment_date: string;
+  orders: Order[];
+}
 
-type Client = {
-  id: string;
+interface Order {
   name: string;
+  id: string;
+  date: string;
+  item_name: string;
+  total_cost: string; // INR as string
+  fabric_meters: number;
+  cost_per_meter: string; // INR as string
+  stitching_cost: string; // INR as string
+  embellishment_cost: string; // INR as string
+  tailor_name: string;
+  fabric_source: string;
+  additional_embellishment: boolean;
+}
+
+interface ClientData {
+  client_name: string;
   phone: string;
   address: string;
-  eventDate: string;
   shipmentDate: string;
-  eventLocation: string;
-  orders: Order[];
+  date_of_event: string;
+  location_of_event: string;
+}
+
+const convertToUSD = (amountInINR: string, conversionRate: number = 82) => {
+  const amount = parseFloat(amountInINR);
+  return (amount / conversionRate).toFixed(2);
 };
 
-export default function Page() {
+function ClientManagementPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
-  const [isNewClientModalOpen, setIsNewClientModalOpen] =
-    useState<boolean>(false);
-  const [isNewOrderModalOpen, setIsNewOrderModalOpen] =
-    useState<boolean>(false);
+  const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
+  const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
+  const [newClient, setNewClient] = useState<Partial<Client>>({});
 
-  const [newClient, setNewClient] = useState<Omit<Client, "id">>({
-    name: "",
-    phone: "",
-    address: "",
-    eventDate: "",
-    shipmentDate: "",
-    eventLocation: "",
-    orders: [],
-  });
-
-  const [newOrder, setNewOrder] = useState<Omit<Order, "id">>({
-    clientName: "",
-    garmentTitle: "",
-    tailorName: "",
-    fabricSource: "",
-    fabricMeters: 0,
-    fabricCostPerMeter: 0,
-    fabricCost: {
-      inr: 0,
-      usd: 0,
-    },
-    stitchingCost: {
-      inr: 0,
-      usd: 0,
-    },
-    padded: false,
-    kanKan: false,
-    embellishments: "",
-  });
-
-  // Fetch clients on component mount
+  // Fetch clients from the API when the component mounts
   useEffect(() => {
     async function fetchClients() {
       try {
-        const response = await fetch("/api/get-clients");
-        const data = await response.json();
-        if (response.ok) {
-          console.log("Clients:", clients);
-          setClients(data.clients); // Ensure `data.clients` is an array
-        } else {
-          console.error("Error fetching clients:", data.error);
+        const response = await fetch("/api/getClients");
+        if (!response.ok) {
+          throw new Error("Failed to fetch clients");
         }
+        const data = await response.json();
+        setClients(data);
       } catch (error) {
-        console.error("Error:", error);
+        console.error(error);
       }
     }
 
     fetchClients();
   }, []);
 
-  function handleClientSelect(client: Client) {
-    setSelectedClient(client);
-  }
+  const handleNewClientSubmit = async (clientData: ClientData) => {
+    try {
+      const response = await fetch("/api/postClients", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(clientData),
+      });
 
-  function handleNewClientChange(event: ChangeEvent<HTMLInputElement>) {
-    const { name, value } = event.target;
-    setNewClient((prev) => ({ ...prev, [name]: value }));
-  }
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error response:", errorData);
+        throw new Error(`Failed to add new client: ${response.statusText}`);
+      }
 
-  function handleNewClientSubmit() {
-    if (Object.values(newClient).some((value) => !value)) {
-      alert("Please fill in all client fields.");
-      return;
+      const newClient = await response.json();
+      setClients((prev) => [...prev, newClient]); // Update with new client
+      setIsNewClientModalOpen(false);
+    } catch (error) {
+      console.error("Error adding new client:", error);
     }
-    setClients((prev) => [...prev, { id: `${Date.now()}`, ...newClient }]);
-    setNewClient({
-      name: "",
-      phone: "",
-      address: "",
-      eventDate: "",
-      shipmentDate: "",
-      eventLocation: "",
-      orders: [],
-    });
-    setIsNewClientModalOpen(false);
-  }
+  };
 
-  function handleNewOrderChange(
-    event: ChangeEvent<HTMLSelectElement | HTMLInputElement>
-  ) {
-    const { name, value, type, checked } = event.target;
-    setNewOrder((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
-  }
+  const handleNewOrderSubmit = async (newOrderData: Partial<Order>) => {
+    try {
+      const response = await fetch("/api/postOrder", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(newOrderData),
+      });
 
-  function handleNewOrderSubmit() {
-    if (!selectedClient) {
-      alert("No client selected.");
-      return;
+      if (!response.ok) {
+        throw new Error("Failed to add new order");
+      }
+
+      const addedOrder = await response.json();
+
+      setClients((prev) =>
+        prev.map((client) =>
+          client.id === selectedClient?.id
+            ? {
+                ...client,
+                orders: [...(client.orders || []), addedOrder],
+              }
+            : client
+        )
+      );
+
+      setIsNewOrderModalOpen(false);
+    } catch (error) {
+      console.error("Failed to add new order:", error);
     }
-    setSelectedClient((prev) => {
-      if (!prev) return null;
-      const updatedOrders = [
-        ...prev.orders,
-        { id: `${Date.now()}`, ...newOrder },
-      ];
-      return { ...prev, orders: updatedOrders };
-    });
-    setNewOrder({
-      clientName: "",
-      garmentTitle: "",
-      tailorName: "",
-      fabricSource: "",
-      fabricMeters: 0,
-      fabricCostPerMeter: 0,
-      fabricCost: {
-        inr: 0,
-        usd: 0,
-      },
-      stitchingCost: {
-        inr: 0,
-        usd: 0,
-      },
-      padded: false,
-      kanKan: false,
-      embellishments: "",
-    });
-    setIsNewOrderModalOpen(false);
-  }
+  };
 
   return (
-    <div className="flex min-h-screen w-full bg-muted/40">
-      <aside className="border-r bg-background p-6 w-80">
+    <div className="flex h-[calc(100vh-64px)] pt-16">
+      <div className="w-1/3 p-4 border-r">
         <ClientList
           clients={clients}
-          onSelect={handleClientSelect}
+          onSelect={setSelectedClient}
           selectedClient={selectedClient}
+          newClient={newClient}
+          handleNewClientChange={(e) =>
+            setNewClient((prev) => ({
+              ...prev,
+              [e.target.name]: e.target.value,
+            }))
+          }
+          handleNewClientSubmit={() => {
+            if (
+              newClient.client_name &&
+              newClient.phone_number &&
+              newClient.address &&
+              newClient.shipment_date &&
+              newClient.date_of_event &&
+              newClient.location_of_event
+            ) {
+              handleNewClientSubmit(newClient as ClientData);
+            } else {
+              console.error("Incomplete client data");
+            }
+          }}
+          setIsNewClientModalOpen={setIsNewClientModalOpen}
           setIsNewOrderModalOpen={setIsNewOrderModalOpen}
           isNewClientModalOpen={isNewClientModalOpen}
-          setIsNewClientModalOpen={setIsNewClientModalOpen}
-          newClient={newClient}
-          handleNewClientChange={handleNewClientChange}
-          handleNewClientSubmit={handleNewClientSubmit}
         />
-      </aside>
-      {selectedClient && (
-        <div className="flex-1 p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold">
-              {selectedClient.name} - {selectedClient.eventLocation}
+      </div>
+      <div className="w-full p-4 overflow-y-auto">
+        {selectedClient && (
+          <div>
+            <h2 className="text-2xl font-bold mb-6">
+              Orders for {selectedClient.client_name}
             </h2>
-            <Button
-              variant="outline"
-              onClick={() => setIsNewOrderModalOpen(true)}
-            >
-              Add New Order
-            </Button>
-          </div>
-          <div className="grid gap-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <h3 className="mb-2 text-sm font-semibold">Contact</h3>
-                <div className="text-sm text-muted-foreground">
-                  <p>{selectedClient.phone}</p>
-                  <p>{selectedClient.address}</p>
-                </div>
-              </div>
-              <div>
-                <h3 className="mb-2 text-sm font-semibold">Event</h3>
-                <div className="text-sm text-muted-foreground">
-                  <p>Date: {selectedClient.eventDate}</p>
-                  <p>Shipment: {selectedClient.shipmentDate}</p>
-                </div>
-              </div>
-            </div>
-            <div>
-              <h3 className="mb-2 text-sm font-semibold">Orders</h3>
-              <div className="grid gap-4">
+            {selectedClient.orders && selectedClient.orders.length > 0 ? (
+              <div className="flex flex-col m-1 w-full">
                 {selectedClient.orders.map((order) => (
                   <div
                     key={order.id}
-                    className="rounded-md bg-background p-4 shadow-sm"
+                    className="bg-card border-2 w-2/3 rounded-lg m-2 shadow-lg overflow-hidden p-6"
                   >
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-3xl font-medium">{order.name}</span>
+                      <span className="text-muted-foreground text-sm">
+                        {order.item_name}
+                      </span>
+                      <span className="text-muted-foreground text-sm">
+                        {order.date}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
                       <div>
-                        <h4 className="mb-2 text-sm font-semibold">
-                          Client Name
-                        </h4>
-                        <div className="text-sm text-muted-foreground">
-                          <p>{order.clientName}</p>
-                        </div>
-                      </div>
-
-                      <div>
-                        <h4 className="mb-2 text-sm font-semibold">Fabric</h4>
-                        <div className="text-sm text-muted-foreground">
-                          <p>Source: {order.fabricSource}</p>
-                          <p>Meters: {order.fabricMeters}</p>
-                          <p>
-                            Cost per Meter: ₹{order.fabricCostPerMeter} ($
-                            {(order.fabricCostPerMeter / 80).toFixed(2)})
-                          </p>
-                          <p>
-                            Total Fabric Cost: ₹{order.fabricCost.inr} ($
-                            {order.fabricCost.usd})
-                          </p>
-                        </div>
+                        <p className="text-muted-foreground">Total Cost</p>
+                        <p className="text-lg font-medium">
+                          ₹{order.total_cost} (${convertToUSD(order.total_cost)}
+                          )
+                        </p>
                       </div>
                       <div>
-                        <h4 className="mb-2 text-sm font-semibold">
-                          Stitching
-                        </h4>
-                        <div className="text-sm text-muted-foreground">
-                          <p>
-                            Stitching Cost: ₹{order.stitchingCost.inr} ($
-                            {order.stitchingCost.usd})
-                          </p>
-                          <p>Padded: {order.padded ? "Yes" : "No"}</p>
-                          <p>KanKan: {order.kanKan ? "Yes" : "No"}</p>
-                        </div>
+                        <p className="text-muted-foreground">Fabric Meters</p>
+                        <p className="text-lg font-medium">
+                          {order.fabric_meters}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Cost per Meter</p>
+                        <p className="text-lg font-medium">
+                          ₹{order.cost_per_meter} ($
+                          {convertToUSD(order.cost_per_meter)})
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Stitching Cost</p>
+                        <p className="text-lg font-medium">
+                          ₹{order.stitching_cost} ($
+                          {convertToUSD(order.stitching_cost)})
+                        </p>
                       </div>
                     </div>
-                    <div className="mt-2">
-                      <h4 className="mb-2 text-sm font-semibold">
-                        Embellishments
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        {order.embellishments}
-                      </p>
-                      <h4 className="mt-2 mb-2 text-sm font-semibold">
-                        Garment
-                      </h4>
-                      <p className="text-sm text-muted-foreground">
-                        {order.garmentTitle}
-                      </p>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-muted-foreground">
+                          Embellishment Cost
+                        </p>
+                        <p className="text-lg font-medium">
+                          ₹{order.embellishment_cost} ($
+                          {convertToUSD(order.embellishment_cost)})
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Tailor</p>
+                        <p className="text-lg font-medium">
+                          {order.tailor_name}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground">Fabric Source</p>
+                        <p className="text-lg font-medium">
+                          {order.fabric_source}
+                        </p>
+                      </div>
+                      {order.additional_embellishment && (
+                        <div>
+                          <p className="text-muted-foreground">
+                            Additional Embellishment
+                          </p>
+                          <p className="text-lg font-medium">Yes</p>
+                        </div>
+                      )}
                     </div>
                   </div>
                 ))}
               </div>
-            </div>
+            ) : (
+              <p className="text-muted-foreground">
+                No orders available for this client.
+              </p>
+            )}
+            <Button
+              className="mt-6"
+              onClick={() => setIsNewOrderModalOpen(true)}
+            >
+              Create New Order
+            </Button>
           </div>
-        </div>
-      )}
-      <Dialog
-        open={isNewClientModalOpen}
-        onOpenChange={setIsNewClientModalOpen}
-      >
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Client</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Input
-                type="text"
-                name="name"
-                placeholder="Client Name"
-                value={newClient.name}
-                onChange={handleNewClientChange}
-              />
-              <Input
-                type="text"
-                name="phone"
-                placeholder="Phone"
-                value={newClient.phone}
-                onChange={handleNewClientChange}
-              />
-              <Input
-                type="text"
-                name="address"
-                placeholder="Address"
-                value={newClient.address}
-                onChange={handleNewClientChange}
-              />
-              <Input
-                type="date"
-                name="eventDate"
-                placeholder="Event Date"
-                value={newClient.eventDate}
-                onChange={handleNewClientChange}
-              />
-              <Input
-                type="date"
-                name="shipmentDate"
-                placeholder="Shipment Date"
-                value={newClient.shipmentDate}
-                onChange={handleNewClientChange}
-              />
-              <Input
-                type="text"
-                name="eventLocation"
-                placeholder="Event Location"
-                value={newClient.eventLocation}
-                onChange={handleNewClientChange}
-              />
-            </div>
-          </div>
-        </DialogContent>
-        <DialogFooter>
-          <Button type="submit" onClick={handleNewClientSubmit}>
-            Submit
-          </Button>
-        </DialogFooter>
-      </Dialog>
-      <Dialog open={isNewOrderModalOpen} onOpenChange={setIsNewOrderModalOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Order</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4">
-            <div className="grid grid-cols-2 gap-4">
-              <Select
-                name="clientName"
-                value={newOrder.clientName}
-                onValueChange={(value) =>
-                  setNewOrder((prev) => ({ ...prev, clientName: value }))
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select Client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clients.map((client) => (
-                    <SelectItem key={client.id} value={client.name}>
-                      {client.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Input
-                type="text"
-                name="garmentTitle"
-                placeholder="Garment Title"
-                value={newOrder.garmentTitle}
-                onChange={handleNewOrderChange}
-              />
-              <Input
-                type="text"
-                name="tailorName"
-                placeholder="Tailor Name"
-                value={newOrder.tailorName}
-                onChange={handleNewOrderChange}
-              />
-              <Input
-                type="text"
-                name="fabricSource"
-                placeholder="Fabric Source"
-                value={newOrder.fabricSource}
-                onChange={handleNewOrderChange}
-              />
-              <Input
-                type="number"
-                name="fabricMeters"
-                placeholder="Fabric Meters"
-                value={newOrder.fabricMeters}
-                onChange={handleNewOrderChange}
-              />
-              <Input
-                type="number"
-                name="fabricCostPerMeter"
-                placeholder="Fabric Cost per Meter"
-                value={newOrder.fabricCostPerMeter}
-                onChange={handleNewOrderChange}
-              />
-              <Input
-                type="number"
-                name="stitchingCostInr"
-                placeholder="Stitching Cost (INR)"
-                value={newOrder.stitchingCost.inr}
-                onChange={handleNewOrderChange}
-              />
-              <Input
-                type="number"
-                name="stitchingCostUsd"
-                placeholder="Stitching Cost (USD)"
-                value={newOrder.stitchingCost.usd}
-                onChange={handleNewOrderChange}
-              />
-              <Switch
-                id="padded"
-                name="padded"
-                checked={newOrder.padded}
-                onCheckedChange={(checked) =>
-                  setNewOrder((prev) => ({ ...prev, padded: checked }))
-                }
-              />
-              <Switch
-                id="kanKan"
-                name="kanKan"
-                checked={newOrder.kanKan}
-                onCheckedChange={(checked) =>
-                  setNewOrder((prev) => ({ ...prev, kanKan: checked }))
-                }
-              />
-              <Textarea
-                name="embellishments"
-                placeholder="Embellishments"
-                value={newOrder.embellishments}
-                onChange={handleNewOrderChange}
-              />
-            </div>
-          </div>
-        </DialogContent>
-        <DialogFooter>
-          <Button type="submit" onClick={handleNewOrderSubmit}>
-            Submit
-          </Button>
-        </DialogFooter>
-      </Dialog>
+        )}
+      </div>
+
+      <NewClientModal
+        isOpen={isNewClientModalOpen}
+        onClose={() => setIsNewClientModalOpen(false)}
+        //@ts-ignore
+        onSubmit={async (clientData: ClientData) => {
+          await handleNewClientSubmit(clientData);
+        }}
+      />
+
+      <NewOrderModal
+        isOpen={isNewOrderModalOpen}
+        onClose={() => setIsNewOrderModalOpen(false)}
+        onSubmit={handleNewOrderSubmit}
+        client_id={selectedClient?.client_id}
+      />
     </div>
   );
 }
+
+export default ClientManagementPage;

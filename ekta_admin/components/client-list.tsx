@@ -8,8 +8,9 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { ChangeEvent, useState } from "react";
-import { Client } from "@/app/page";
+import { ChangeEvent } from "react";
+//@ts-ignore
+import type { Client } from "@/app/page";
 
 type ClientListProps = {
   clients: Client[];
@@ -18,7 +19,7 @@ type ClientListProps = {
   setIsNewOrderModalOpen: (open: boolean) => void;
   isNewClientModalOpen: boolean;
   setIsNewClientModalOpen: (open: boolean) => void;
-  newClient: Omit<Client, "id">;
+  newClient?: Partial<Omit<Client, "id">>;
   handleNewClientChange: (event: ChangeEvent<HTMLInputElement>) => void;
   handleNewClientSubmit: () => void;
 };
@@ -30,7 +31,7 @@ export default function ClientList({
   setIsNewOrderModalOpen,
   isNewClientModalOpen,
   setIsNewClientModalOpen,
-  newClient,
+  newClient = {},
   handleNewClientChange,
   handleNewClientSubmit,
 }: ClientListProps) {
@@ -54,7 +55,7 @@ export default function ClientList({
               }`}
               onClick={() => onSelect(client)}
             >
-              {client.name} - {client.eventLocation}
+              {client.client_name} - {client.location_of_event}
             </li>
           ))
         ) : (
@@ -77,7 +78,7 @@ export default function ClientList({
               <Input
                 id="name"
                 name="name"
-                value={newClient.name}
+                value={newClient?.name ?? ""}
                 onChange={handleNewClientChange}
               />
             </div>
@@ -86,7 +87,7 @@ export default function ClientList({
               <Input
                 id="phone"
                 name="phone"
-                value={newClient.phone}
+                value={newClient?.phone ?? ""}
                 onChange={handleNewClientChange}
               />
             </div>
@@ -95,7 +96,7 @@ export default function ClientList({
               <Input
                 id="address"
                 name="address"
-                value={newClient.address}
+                value={newClient?.address ?? ""}
                 onChange={handleNewClientChange}
               />
             </div>
@@ -105,7 +106,7 @@ export default function ClientList({
                 id="eventDate"
                 name="eventDate"
                 type="date"
-                value={newClient.eventDate}
+                value={newClient?.eventDate ?? ""}
                 onChange={handleNewClientChange}
               />
             </div>
@@ -115,7 +116,7 @@ export default function ClientList({
                 id="shipmentDate"
                 name="shipmentDate"
                 type="date"
-                value={newClient.shipmentDate}
+                value={newClient?.shipmentDate ?? ""}
                 onChange={handleNewClientChange}
               />
             </div>
@@ -124,7 +125,7 @@ export default function ClientList({
               <Input
                 id="eventLocation"
                 name="eventLocation"
-                value={newClient.eventLocation}
+                value={newClient?.eventLocation ?? ""}
                 onChange={handleNewClientChange}
               />
             </div>
