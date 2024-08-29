@@ -17,6 +17,7 @@ export async function POST(request: Request) {
       tailor_name,
       fabric_source,
       additional_embellishment,
+         description
     } = data;
 
     console.log("client_name:", client_name);
@@ -66,7 +67,8 @@ export async function POST(request: Request) {
         stitching_cost,
         embellishment_cost,
         tailor_name,
-        fabric_source
+        fabric_source,
+         description
       )
       VALUES (
         ${client_name},
@@ -78,9 +80,10 @@ export async function POST(request: Request) {
         ${parsedStitchingCost},
         ${parsedEmbellishmentCost},
         ${tailor_name},
-        ${fabric_source}
+        ${fabric_source},
+        ${ description}
       )
-      RETURNING id, name, client_id, item_name, fabric_meters, cost_per_meter, total_cost, stitching_cost, embellishment_cost, tailor_name, fabric_source
+      RETURNING id, name, client_id, item_name, fabric_meters, cost_per_meter, total_cost, stitching_cost, embellishment_cost, tailor_name, fabric_source,  description
     `;
 
     // Return the newly created order

@@ -7,6 +7,8 @@ import NewClientModal from "@/components/new-client-modal";
 import NewOrderModal from "@/components/new-order-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { toast } from "sonner";
+import { set } from "date-fns";
 
 interface Client {
   id: any;
@@ -57,7 +59,7 @@ function ClientManagementPage() {
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
   const [newClient, setNewClient] = useState<Partial<Client>>({});
-
+  const [deleteOrder, setDelete] = useState(false);
   useEffect(() => {
     async function fetchClients() {
       try {
@@ -66,15 +68,34 @@ function ClientManagementPage() {
           throw new Error("Failed to fetch clients");
         }
         const data = await response.json();
+        console.log("Data:", data);
         setClients(data);
       } catch (error) {
         console.error(error);
+        toast.error("Failed to fetch clients");
       }
     }
 
     fetchClients();
-  }, []);
-
+  }, [selectedClient, isNewClientModalOpen, isNewOrderModalOpen, deleteOrder]);
+  const handleDelete = async (orderId: string) => {
+    console.log("Order ID:", orderId);
+    try {
+      const response = await fetch(`/api/deleteOrder/${orderId}`, {
+        method: "DELETE",
+      });
+      console.log("Response:", response);
+      if (response.ok) {
+        toast.success("Order deleted successfully.");
+        setDelete(true);
+        // Optionally refresh the page or update the state to remove the deleted order from the UI
+      } else {
+        toast.error("Failed to delete order.");
+      }
+    } catch (error) {
+      toast.error("Failed to delete order.");
+    }
+  };
   const handleNewClientSubmit = async (clientData: ClientData) => {
     try {
       const response = await fetch("/api/postClients", {
@@ -94,12 +115,15 @@ function ClientManagementPage() {
       const newClient = await response.json();
       setClients((prev) => [...prev, newClient]);
       setIsNewClientModalOpen(false);
+      toast.success("New client added successfully.");
     } catch (error) {
       console.error("Error adding new client:", error);
+      toast.error("Failed to add new client. Please try again.");
     }
   };
 
   const handleNewOrderSubmit = async (newOrderData: Partial<Order>) => {
+    console.log("New Order Data:", newOrderData);
     try {
       const response = await fetch("/api/postOrder", {
         method: "POST",
@@ -127,8 +151,10 @@ function ClientManagementPage() {
       );
 
       setIsNewOrderModalOpen(false);
+      toast.success("New order added successfully.");
     } catch (error) {
       console.error("Failed to add new order:", error);
+      toast.error("Failed to add new order. Please try again.");
     }
   };
 
@@ -157,7 +183,7 @@ function ClientManagementPage() {
             ) {
               handleNewClientSubmit(newClient as ClientData);
             } else {
-              console.error("Incomplete client data");
+              toast.error("Please fill out all required fields.");
             }
           }}
           setIsNewClientModalOpen={setIsNewClientModalOpen}
@@ -166,23 +192,33 @@ function ClientManagementPage() {
         />
       </div>
       <div className="w-2/3 p-4">
-        <ScrollArea className="h-full">
+        <ScrollArea className="h-full w-full">
           {selectedClient && (
             <Card>
               <CardHeader>
-                <CardTitle>Orders for {selectedClient.client_name}</CardTitle>
+                <CardTitle className="text-2xl font-semibold mb-4">
+                  Orders for {selectedClient.client_name}
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 {selectedClient.orders && selectedClient.orders.length > 0 ? (
                   <div className="space-y-4">
                     {selectedClient.orders.map((order) => (
                       <Card key={order.id}>
+                        {/* put delete button here */}
+
                         <CardHeader>
                           <div className="flex justify-between items-center">
                             <CardTitle>{order.name}</CardTitle>
                             <div className="text-sm text-muted-foreground">
                               {order.item_name} | {order.id}
                             </div>
+                            <Button
+                              variant="outline"
+                              onClick={() => handleDelete(order.id)}
+                            >
+                              Delete
+                            </Button>
                           </div>
                         </CardHeader>
                         <CardContent>
@@ -229,6 +265,10 @@ function ClientManagementPage() {
                                 value="Yes"
                               />
                             )}
+                            <OrderDetail
+                              label="Description"
+                              value={order.description}
+                            />
                           </div>
                         </CardContent>
                       </Card>
@@ -256,7 +296,7 @@ function ClientManagementPage() {
         onClose={() => setIsNewClientModalOpen(false)}
         //@ts-ignore
         onSubmit={async (clientData: ClientData) => {
-          return await handleNewClientSubmit(clientData);
+          await handleNewClientSubmit(clientData);
         }}
       />
 

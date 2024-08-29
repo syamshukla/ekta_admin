@@ -1,10 +1,10 @@
-import { NextResponse } from "next/server";
-import { sql } from "@vercel/postgres";
+import { NextResponse } from 'next/server';
+import { sql } from '@vercel/postgres';
 
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const clientId = searchParams.get("clientId");
+    const clientId = searchParams.get('clientId');
 
     let query: string;
     let queryParams: any[] = [];
@@ -29,7 +29,8 @@ export async function GET(request: Request) {
           o.stitching_cost,
           o.embellishment_cost,
           o.tailor_name,
-          o.fabric_source
+          o.fabric_source,
+          o.description
         FROM 
           clients c
         LEFT JOIN 
@@ -60,7 +61,8 @@ export async function GET(request: Request) {
           o.stitching_cost,
           o.embellishment_cost,
           o.tailor_name,
-          o.fabric_source
+          o.fabric_source,
+          o.description
         FROM 
           clients c
         LEFT JOIN 
@@ -87,6 +89,7 @@ export async function GET(request: Request) {
         embellishment_cost: row.embellishment_cost,
         tailor_name: row.tailor_name,
         fabric_source: row.fabric_source,
+        description: row.description
       };
 
       if (clientIndex === -1) {
@@ -111,9 +114,9 @@ export async function GET(request: Request) {
 
     return NextResponse.json(clients);
   } catch (error) {
-    console.error("Failed to fetch clients with orders:", error);
+    console.error('Failed to fetch clients with orders:', error);
     return NextResponse.json(
-      { error: "Failed to fetch clients with orders" },
+      { error: 'Failed to fetch clients with orders' },
       { status: 500 }
     );
   }

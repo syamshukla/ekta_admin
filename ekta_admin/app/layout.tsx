@@ -7,14 +7,12 @@ import Navbar from "@/components/layout/navbar";
 import { ThemeProvider } from "@/lib/providers/theme-provider";
 import { Container } from "@/components/layout/container";
 import { Toaster } from "@/components/ui/sonner";
+import Footer from "@/components/footer";
 
 export const metadata: Metadata = {
   title: "EKTA ADMIN",
   description: "ADMIN SITE FOR EKTA",
   viewport: "width=device-width, initial-scale=1",
-  icons: {
-    icon: "../public/favicon.png",
-  },
 };
 
 export default function RootLayout({
@@ -33,7 +31,8 @@ export default function RootLayout({
         >
           <Navbar />
           <Container>{children}</Container>
-          <Toaster position="top-center" />
+          <Footer />
+          <Toaster richColors position="top-center" />
         </ThemeProvider>
       </body>
     </html>

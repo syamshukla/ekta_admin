@@ -45,7 +45,6 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
     additional_embellishment: false,
   });
 
-  // Update newOrder state when client_id prop changes
   useEffect(() => {
     if (client_id) {
       setNewOrder((prev) => ({ ...prev, client_id }));
@@ -67,16 +66,16 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
       tailor_name: value,
     }));
   };
-  const handleCheckboxChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, checked } = event.target;
 
-    setNewOrder((prev) => ({
-      ...prev,
-      [name]: checked,
-    }));
-  };
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+
+    // Basic validation
+    if (!newOrder.client_name || !newOrder.date || !newOrder.item_name) {
+      alert("Please fill out all required fields.");
+      return;
+    }
+
     onSubmit(newOrder);
     setNewOrder({
       client_name: "",
@@ -102,7 +101,6 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
         </DialogHeader>
         <form onSubmit={handleSubmit}>
           <div className="grid gap-4 py-4">
-            {/* New Client Name Field */}
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="client_name" className="text-right">
                 Client Name
@@ -113,10 +111,9 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
                 value={newOrder.client_name}
                 onChange={handleChange}
                 className="col-span-3"
+                required
               />
             </div>
-
-            {/* Existing Form Fields */}
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="tailor_name" className="text-right">
                 Tailor Name
@@ -147,6 +144,7 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
                 value={newOrder.date}
                 onChange={handleChange}
                 className="col-span-3"
+                required
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -159,6 +157,7 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
                 value={newOrder.item_name}
                 onChange={handleChange}
                 className="col-span-3"
+                required
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -229,37 +228,33 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
               <Label htmlFor="additional_embellishment" className="text-right">
                 Additional Embellishment
               </Label>
-              {/* <Input
-                id="additional_embellishment"
-                name="additional_embellishment"
-                type="checkbox"
-                checked={newOrder.additional_embellishment}
-                onChange={handleChange}
-                className="col-s
-                pan-3"
-              /> */}
               <Checkbox
                 id="additional_embellishment"
                 name="additional_embellishment"
                 checked={newOrder.additional_embellishment}
                 onCheckedChange={(checked) =>
-                  handleCheckboxChange({
+                  handleChange({
                     target: {
                       name: "additional_embellishment",
+                      type: "checkbox",
                       checked: checked,
                     },
                   } as React.ChangeEvent<HTMLInputElement>)
                 }
-                className="cursor-pointer"
+                className="col-span-3"
               />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="description" className="text-right">
+                Description
+              </Label>
               <Input
                 id="description"
-                type="text"
-                className="col-span-4"
                 name="description"
-                placeholder="Description"
-                value={newOrder.description || ""}
+                value={newOrder.description}
                 onChange={handleChange}
+                className="col-span-3"
+                placeholder="Description"
               />
             </div>
           </div>
@@ -273,3 +268,6 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
 };
 
 export default NewOrderModal;
+function onDelete(orderId: any) {
+  throw new Error("Function not implemented.");
+}
