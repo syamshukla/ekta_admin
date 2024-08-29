@@ -254,8 +254,9 @@ function ClientManagementPage() {
       <NewClientModal
         isOpen={isNewClientModalOpen}
         onClose={() => setIsNewClientModalOpen(false)}
+        //@ts-ignore
         onSubmit={async (clientData: ClientData) => {
-          await handleNewClientSubmit(clientData);
+          return await handleNewClientSubmit(clientData);
         }}
       />
 

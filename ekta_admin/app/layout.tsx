@@ -11,6 +11,10 @@ import { Toaster } from "@/components/ui/sonner";
 export const metadata: Metadata = {
   title: "EKTA ADMIN",
   description: "ADMIN SITE FOR EKTA",
+  viewport: "width=device-width, initial-scale=1",
+  icons: {
+    icon: "../public/favicon.png",
+  },
 };
 
 export default function RootLayout({
