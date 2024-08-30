@@ -222,7 +222,7 @@ function ClientManagementPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-64px)] pt-16">
+    <div className="flex h-[calc(100vh-64px)]  pt-16">
       <div className="w-1/3 p-4 border-r">
         <ClientList
           clients={clients}
@@ -249,8 +249,8 @@ function ClientManagementPage() {
           <FaPlus className="mr-2" /> Add New Client
         </Button>
       </div>
-      <div className=" p-4">
-        <ScrollArea className="h-full w-full">
+      <div className="flex-1 p-4">
+        <ScrollArea className="h-full">
           {selectedClient && (
             <Card>
               <CardHeader>
@@ -312,7 +312,8 @@ function ClientManagementPage() {
                               value={formatDate(order.date)}
                             />
                           </div>
-                          <Table>
+                          
+                          <Table className="w-full">
                             <TableHeader>
                               <TableRow>
                                 <TableHead>Fabric Source</TableHead>
