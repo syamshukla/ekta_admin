@@ -312,7 +312,7 @@ function ClientManagementPage() {
                               value={formatDate(order.date)}
                             />
                           </div>
-                          
+
                           <Table className="w-full">
                             <TableHeader>
                               <TableRow>
