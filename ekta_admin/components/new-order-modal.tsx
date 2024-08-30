@@ -15,13 +15,31 @@ import {
   SelectContent,
   SelectItem,
 } from "@/components/ui/select";
-import { Checkbox } from "./ui/checkbox";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import ItemModal from "./item-modal";
 
 interface NewOrderModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSubmit: (order: any) => void;
   client_id: string | undefined;
+}
+
+interface Item {
+  id?: string;
+  fabric_source: string;
+  fabric_meters: number;
+  cost_per_meter: number;
+  stitching_cost: number;
+  embellishment_cost: number;
+  description: string;
 }
 
 const NewOrderModal: React.FC<NewOrderModalProps> = ({
@@ -34,17 +52,13 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
     client_name: "",
     client_id: "",
     date: "",
-    description: "",
     item_name: "",
-    fabric_source: "",
-    fabric_meters: "",
-    cost_per_meter: "",
-    stitching_cost: "",
-    embellishment_cost: "",
     tailor_name: "",
-    additional_embellishment: false,
   });
+  const [items, setItems] = useState<Item[]>([]);
+  const [isItemModalOpen, setIsItemModalOpen] = useState(false);
 
+  // Update client_id in state whenever client_id prop changes
   useEffect(() => {
     if (client_id) {
       setNewOrder((prev) => ({ ...prev, client_id }));
@@ -52,50 +66,55 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
   }, [client_id]);
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, type, checked, value } = event.target;
-
-    setNewOrder((prev) => ({
-      ...prev,
-      [name]: type === "checkbox" ? checked : value,
-    }));
+    const { name, value } = event.target;
+    setNewOrder((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSelectChange = (value: string) => {
-    setNewOrder((prev) => ({
-      ...prev,
-      tailor_name: value,
-    }));
+    setNewOrder((prev) => ({ ...prev, tailor_name: value }));
   };
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    // Basic validation
-    if (!newOrder.client_name || !newOrder.date || !newOrder.item_name) {
-      alert("Please fill out all required fields.");
+    if (
+      !newOrder.client_name ||
+      !newOrder.date ||
+      !newOrder.item_name ||
+      items.length === 0
+    ) {
+      alert("Please fill out all required fields and add at least one item.");
       return;
     }
 
-    onSubmit(newOrder);
+    const totalCost = items.reduce((sum, item) => {
+      return (
+        sum +
+        (item.fabric_meters * item.cost_per_meter +
+          item.stitching_cost +
+          item.embellishment_cost)
+      );
+    }, 0);
+
+    onSubmit({ ...newOrder, items, total_cost: totalCost });
     setNewOrder({
       client_name: "",
       client_id: "",
       date: "",
-      description: "",
       item_name: "",
-      fabric_source: "",
-      fabric_meters: "",
-      cost_per_meter: "",
-      stitching_cost: "",
-      embellishment_cost: "",
       tailor_name: "",
-      additional_embellishment: false,
     });
+    setItems([]);
+  };
+
+  const handleAddItem = (item: Item) => {
+    setItems((prev) => [...prev, item]);
+    setIsItemModalOpen(false);
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent>
+      <DialogContent className="max-w-3xl">
         <DialogHeader>
           <DialogTitle>Create New Order</DialogTitle>
         </DialogHeader>
@@ -160,114 +179,53 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
                 required
               />
             </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="fabric_source" className="text-right">
-                Fabric Source
-              </Label>
-              <Input
-                id="fabric_source"
-                name="fabric_source"
-                value={newOrder.fabric_source}
-                onChange={handleChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="fabric_meters" className="text-right">
-                Fabric Meters
-              </Label>
-              <Input
-                id="fabric_meters"
-                name="fabric_meters"
-                type="number"
-                value={newOrder.fabric_meters}
-                onChange={handleChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="cost_per_meter" className="text-right">
-                Cost Per Meter
-              </Label>
-              <Input
-                id="cost_per_meter"
-                name="cost_per_meter"
-                type="number"
-                value={newOrder.cost_per_meter}
-                onChange={handleChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="stitching_cost" className="text-right">
-                Stitching Cost
-              </Label>
-              <Input
-                id="stitching_cost"
-                name="stitching_cost"
-                type="number"
-                value={newOrder.stitching_cost}
-                onChange={handleChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="embellishment_cost" className="text-right">
-                Embellishment Cost
-              </Label>
-              <Input
-                id="embellishment_cost"
-                name="embellishment_cost"
-                type="number"
-                value={newOrder.embellishment_cost}
-                onChange={handleChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="additional_embellishment" className="text-right">
-                Additional Embellishment
-              </Label>
-              <Checkbox
-                id="additional_embellishment"
-                name="additional_embellishment"
-                checked={newOrder.additional_embellishment}
-                onCheckedChange={(checked) =>
-                  handleChange({
-                    target: {
-                      name: "additional_embellishment",
-                      type: "checkbox",
-                      checked: checked,
-                    },
-                  } as React.ChangeEvent<HTMLInputElement>)
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="description" className="text-right">
-                Description
-              </Label>
-              <Input
-                id="description"
-                name="description"
-                value={newOrder.description}
-                onChange={handleChange}
-                className="col-span-3"
-                placeholder="Description"
-              />
-            </div>
+          </div>
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold mb-2">Items</h3>
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Fabric Source</TableHead>
+                  <TableHead>Fabric Meters</TableHead>
+                  <TableHead>Cost per Meter</TableHead>
+                  <TableHead>Stitching Cost</TableHead>
+                  <TableHead>Embellishment Cost</TableHead>
+                  <TableHead>Description</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {items.map((item, index) => (
+                  <TableRow key={index}>
+                    <TableCell>{item.fabric_source}</TableCell>
+                    <TableCell>{item.fabric_meters}</TableCell>
+                    <TableCell>{item.cost_per_meter}</TableCell>
+                    <TableCell>{item.stitching_cost}</TableCell>
+                    <TableCell>{item.embellishment_cost}</TableCell>
+                    <TableCell>{item.description}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+            <Button
+              type="button"
+              onClick={() => setIsItemModalOpen(true)}
+              className="mt-4"
+            >
+              Add Item
+            </Button>
           </div>
           <DialogFooter>
             <Button type="submit">Create Order</Button>
           </DialogFooter>
         </form>
       </DialogContent>
+      <ItemModal
+        isOpen={isItemModalOpen}
+        onClose={() => setIsItemModalOpen(false)}
+        onSubmit={handleAddItem}
+      />
     </Dialog>
   );
 };
 
 export default NewOrderModal;
-function onDelete(orderId: any) {
-  throw new Error("Function not implemented.");
-}

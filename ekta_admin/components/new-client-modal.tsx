@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState } from "react";
 import {
   Dialog,
@@ -19,11 +20,11 @@ interface NewClientModalProps {
 
 interface ClientData {
   name: string;
-  phone: string;
+  phone_number: string;
   address: string;
-  eventDate: string;
-  shipmentDate: string;
-  eventLocation: string;
+  date_needed: string;
+  date_of_event: string;
+  location_of_event: string;
 }
 
 const NewClientModal: React.FC<NewClientModalProps> = ({
@@ -33,11 +34,11 @@ const NewClientModal: React.FC<NewClientModalProps> = ({
 }) => {
   const [newClient, setNewClient] = useState<ClientData>({
     name: "",
-    phone: "",
+    phone_number: "",
     address: "",
-    eventDate: "",
-    shipmentDate: "",
-    eventLocation: "",
+    date_needed: "",
+    date_of_event: "",
+    location_of_event: "",
   });
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -50,11 +51,11 @@ const NewClientModal: React.FC<NewClientModalProps> = ({
     onSubmit(newClient);
     setNewClient({
       name: "",
-      phone: "",
+      phone_number: "",
       address: "",
-      eventDate: "",
-      shipmentDate: "",
-      eventLocation: "",
+      date_needed: "",
+      date_of_event: "",
+      location_of_event: "",
     });
   };
 
@@ -79,13 +80,13 @@ const NewClientModal: React.FC<NewClientModalProps> = ({
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="phone" className="text-right">
+              <Label htmlFor="phone_number" className="text-right">
                 Phone
               </Label>
               <Input
-                id="phone"
-                name="phone"
-                value={newClient.phone}
+                id="phone_number"
+                name="phone_number"
+                value={newClient.phone_number}
                 onChange={handleChange}
                 className="col-span-3"
               />
@@ -103,39 +104,39 @@ const NewClientModal: React.FC<NewClientModalProps> = ({
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="eventDate" className="text-right">
-                Event Date
-              </Label>
-              <Input
-                id="eventDate"
-                name="eventDate"
-                type="date"
-                value={newClient.eventDate}
-                onChange={handleChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="shipmentDate" className="text-right">
+              <Label htmlFor="date_needed" className="text-right">
                 Shipment Date
               </Label>
               <Input
-                id="shipmentDate"
-                name="shipmentDate"
+                id="date_needed"
+                name="date_needed"
                 type="date"
-                value={newClient.shipmentDate}
+                value={newClient.date_needed}
                 onChange={handleChange}
                 className="col-span-3"
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="eventLocation" className="text-right">
+              <Label htmlFor="date_of_event" className="text-right">
+                Event Date
+              </Label>
+              <Input
+                id="date_of_event"
+                name="date_of_event"
+                type="date"
+                value={newClient.date_of_event}
+                onChange={handleChange}
+                className="col-span-3"
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="location_of_event" className="text-right">
                 Event Location
               </Label>
               <Input
-                id="eventLocation"
-                name="eventLocation"
-                value={newClient.eventLocation}
+                id="location_of_event"
+                name="location_of_event"
+                value={newClient.location_of_event}
                 onChange={handleChange}
                 className="col-span-3"
               />

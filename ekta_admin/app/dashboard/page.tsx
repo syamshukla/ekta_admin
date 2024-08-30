@@ -8,42 +8,49 @@ import NewOrderModal from "@/components/new-order-modal";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { toast } from "sonner";
-import { set } from "date-fns";
-
+import { FaTrash, FaEdit, FaPlus } from "react-icons/fa";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 interface Client {
-  id: any;
+  name: string;
   client_id: string;
-  client_name: string;
   phone_number: string;
   address: string;
   date_needed: string;
   date_of_event: string;
   location_of_event: string;
-  shipment_date: string;
   orders: Order[];
 }
 
 interface Order {
-  name: string;
-  id: string;
-  date: string;
-  item_name: string;
-  total_cost: string;
-  fabric_meters: number;
-  cost_per_meter: string;
-  stitching_cost: string;
-  embellishment_cost: string;
-  tailor_name: string;
-  fabric_source: string;
-  additional_embellishment: boolean;
-  description: string;
+  id: string; // Assuming this is an identifier
+  client_name: string; // Client's name
+  date: string; // Date in ISO format
+  item_name: string; // Name of the item
+  total_cost: string; // Total cost as a string
+  items: Array<{
+    fabric_source: string; // Source of the fabric
+    fabric_meters: string; // Fabric meters as a string
+    cost_per_meter: string; // Cost per meter as a string
+    stitching_cost: string; // Stitching cost as a string
+    embellishment_cost: string; // Embellishment cost as a string
+    description: string; // Description of the item
+  }>;
+  tailor_name: string; // Tailor's name
+  additional_embellishments: string; // In the JSON, this field may be represented as a string, e.g., "No"
 }
 
 interface ClientData {
-  client_name: string;
-  phone: string;
+  name: string;
+  phone_number: string;
   address: string;
-  shipmentDate: string;
+  date_needed: string;
   date_of_event: string;
   location_of_event: string;
 }
@@ -53,13 +60,22 @@ const convertToUSD = (amountInINR: string, conversionRate: number = 82) => {
   return (amount / conversionRate).toFixed(2);
 };
 
+const formatDate = (dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+};
+
 function ClientManagementPage() {
   const [clients, setClients] = useState<Client[]>([]);
   const [selectedClient, setSelectedClient] = useState<Client | null>(null);
   const [isNewClientModalOpen, setIsNewClientModalOpen] = useState(false);
   const [isNewOrderModalOpen, setIsNewOrderModalOpen] = useState(false);
-  const [newClient, setNewClient] = useState<Partial<Client>>({});
-  const [deleteOrder, setDelete] = useState(false);
+  const [deleteOrder, setDeleteOrder] = useState(false);
+
   useEffect(() => {
     async function fetchClients() {
       try {
@@ -68,7 +84,7 @@ function ClientManagementPage() {
           throw new Error("Failed to fetch clients");
         }
         const data = await response.json();
-        console.log("Data:", data);
+        console.log("Fetched clients:", data);
         setClients(data);
       } catch (error) {
         console.error(error);
@@ -78,17 +94,52 @@ function ClientManagementPage() {
 
     fetchClients();
   }, [selectedClient, isNewClientModalOpen, isNewOrderModalOpen, deleteOrder]);
+
+  const handleUpdate = async (orderId: string, updatedData: Partial<Order>) => {
+    try {
+      const response = await fetch(`/api/updateOrder`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ id: orderId, ...updatedData }),
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success("Order updated successfully.");
+        setSelectedClient((prevClient) => {
+          if (!prevClient) return null;
+          return {
+            ...prevClient,
+            orders: prevClient.orders.map((order) =>
+              order.id === orderId ? { ...order, ...updatedData } : order
+            ),
+          };
+        });
+      } else {
+        toast.error(`Failed to update order: ${result.error}`);
+      }
+    } catch (error) {
+      toast.error("Failed to update order.");
+    }
+  };
+
   const handleDelete = async (orderId: string) => {
-    console.log("Order ID:", orderId);
     try {
       const response = await fetch(`/api/deleteOrder/${orderId}`, {
         method: "DELETE",
       });
-      console.log("Response:", response);
       if (response.ok) {
         toast.success("Order deleted successfully.");
-        setDelete(true);
-        // Optionally refresh the page or update the state to remove the deleted order from the UI
+        setDeleteOrder((prev) => !prev);
+        setSelectedClient((prevClient) => {
+          if (!prevClient) return null;
+          return {
+            ...prevClient,
+            orders: prevClient.orders.filter((order) => order.id !== orderId),
+          };
+        });
       } else {
         toast.error("Failed to delete order.");
       }
@@ -96,6 +147,7 @@ function ClientManagementPage() {
       toast.error("Failed to delete order.");
     }
   };
+
   const handleNewClientSubmit = async (clientData: ClientData) => {
     try {
       const response = await fetch("/api/postClients", {
@@ -123,7 +175,8 @@ function ClientManagementPage() {
   };
 
   const handleNewOrderSubmit = async (newOrderData: Partial<Order>) => {
-    console.log("New Order Data:", newOrderData);
+    console.log("Submitting new order:", newOrderData); // Debug log
+
     try {
       const response = await fetch("/api/postOrder", {
         method: "POST",
@@ -134,14 +187,16 @@ function ClientManagementPage() {
       });
 
       if (!response.ok) {
+        const errorData = await response.json();
+        console.error("Error response from server:", errorData);
         throw new Error("Failed to add new order");
       }
 
       const addedOrder = await response.json();
-
+      // Add the order to the client state
       setClients((prev) =>
         prev.map((client) =>
-          client.id === selectedClient?.id
+          client.client_id === selectedClient?.client_id
             ? {
                 ...client,
                 orders: [...(client.orders || []), addedOrder],
@@ -149,6 +204,14 @@ function ClientManagementPage() {
             : client
         )
       );
+
+      setSelectedClient((prevClient) => {
+        if (!prevClient) return null;
+        return {
+          ...prevClient,
+          orders: [...prevClient.orders, addedOrder],
+        };
+      });
 
       setIsNewOrderModalOpen(false);
       toast.success("New order added successfully.");
@@ -165,64 +228,75 @@ function ClientManagementPage() {
           clients={clients}
           onSelect={setSelectedClient}
           selectedClient={selectedClient}
-          newClient={newClient}
-          handleNewClientChange={(e) =>
-            setNewClient((prev) => ({
-              ...prev,
-              [e.target.name]: e.target.value,
-            }))
-          }
-          handleNewClientSubmit={() => {
-            if (
-              newClient.client_name &&
-              newClient.phone_number &&
-              newClient.address &&
-              newClient.shipment_date &&
-              newClient.date_of_event &&
-              newClient.location_of_event
-            ) {
-              handleNewClientSubmit(newClient as ClientData);
-            } else {
-              toast.error("Please fill out all required fields.");
-            }
-          }}
           setIsNewClientModalOpen={setIsNewClientModalOpen}
-          setIsNewOrderModalOpen={setIsNewOrderModalOpen}
-          isNewClientModalOpen={isNewClientModalOpen}
+          setIsNewOrderModalOpen={function (open: boolean): void {
+            throw new Error("Function not implemented.");
+          }}
+          isNewClientModalOpen={false}
+          handleNewClientChange={function (
+            event: React.ChangeEvent<HTMLInputElement>
+          ): void {
+            throw new Error("Function not implemented.");
+          }}
+          handleNewClientSubmit={function (): void {
+            throw new Error("Function not implemented.");
+          }}
         />
+        <Button
+          onClick={() => setIsNewClientModalOpen(true)}
+          className="mt-4 w-full"
+        >
+          <FaPlus className="mr-2" /> Add New Client
+        </Button>
       </div>
-      <div className="w-2/3 p-4">
+      <div className=" p-4">
         <ScrollArea className="h-full w-full">
           {selectedClient && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-2xl font-semibold mb-4">
-                  Orders for {selectedClient.client_name}
-                </CardTitle>
+                <div className="flex justify-between items-center">
+                  <CardTitle className="text-2xl font-semibold">
+                    Orders for {selectedClient.name}
+                  </CardTitle>
+                  <Button
+                    onClick={() => setIsNewOrderModalOpen(true)}
+                    className="flex items-center gap-2"
+                  >
+                    <FaPlus /> Add New Order
+                  </Button>
+                </div>
               </CardHeader>
               <CardContent>
                 {selectedClient.orders && selectedClient.orders.length > 0 ? (
                   <div className="space-y-4">
                     {selectedClient.orders.map((order) => (
                       <Card key={order.id}>
-                        {/* put delete button here */}
-
                         <CardHeader>
                           <div className="flex justify-between items-center">
-                            <CardTitle>{order.name}</CardTitle>
-                            <div className="text-sm text-muted-foreground">
-                              {order.item_name} | {order.id}
+                            <CardTitle>{order.item_name}</CardTitle>
+                            <div className="flex space-x-2">
+                              <Button
+                                variant="outline"
+                                className="w-8 h-8 p-0 flex items-center justify-center"
+                                onClick={() => handleUpdate(order.id, {})}
+                              >
+                                <FaEdit className="text-blue-500" />
+                              </Button>
+                              <Button
+                                variant="outline"
+                                className="w-8 h-8 p-0 flex items-center justify-center"
+                                onClick={() => handleDelete(order.id)}
+                              >
+                                <FaTrash className="text-red-500" />
+                              </Button>
                             </div>
-                            <Button
-                              variant="outline"
-                              onClick={() => handleDelete(order.id)}
-                            >
-                              Delete
-                            </Button>
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {order.client_name} | {order.id}
                           </div>
                         </CardHeader>
                         <CardContent>
-                          <div className="grid grid-cols-2 gap-4">
+                          <div className="flex flex-col gap-3">
                             <OrderDetail
                               label="Total Cost"
                               value={`₹${order.total_cost} ($${convertToUSD(
@@ -230,93 +304,74 @@ function ClientManagementPage() {
                               )})`}
                             />
                             <OrderDetail
-                              label="Fabric Meters"
-                              value={order.fabric_meters.toString()}
-                            />
-                            <OrderDetail
-                              label="Cost per Meter"
-                              value={`₹${order.cost_per_meter} ($${convertToUSD(
-                                order.cost_per_meter
-                              )})`}
-                            />
-                            <OrderDetail
-                              label="Stitching Cost"
-                              value={`₹${order.stitching_cost} ($${convertToUSD(
-                                order.stitching_cost
-                              )})`}
-                            />
-                            <OrderDetail
-                              label="Embellishment Cost"
-                              value={`₹${
-                                order.embellishment_cost
-                              } ($${convertToUSD(order.embellishment_cost)})`}
-                            />
-                            <OrderDetail
-                              label="Tailor"
+                              label="Tailor Name"
                               value={order.tailor_name}
                             />
                             <OrderDetail
-                              label="Fabric Source"
-                              value={order.fabric_source}
-                            />
-                            {order.additional_embellishment && (
-                              <OrderDetail
-                                label="Additional Embellishment"
-                                value="Yes"
-                              />
-                            )}
-                            <OrderDetail
-                              label="Description"
-                              value={order.description}
+                              label="Date Needed"
+                              value={formatDate(order.date)}
                             />
                           </div>
+                          <Table>
+                            <TableHeader>
+                              <TableRow>
+                                <TableHead>Fabric Source</TableHead>
+                                <TableHead>Fabric Meters</TableHead>
+                                <TableHead>Cost per Meter</TableHead>
+                                <TableHead>Stitching Cost</TableHead>
+                                <TableHead>Embellishment Cost</TableHead>
+                                <TableHead>Description</TableHead>
+                              </TableRow>
+                            </TableHeader>
+                            <TableBody>
+                              {order.items.map((item, index) => (
+                                <TableRow key={index}>
+                                  <TableCell>{item.fabric_source}</TableCell>
+                                  <TableCell>{item.fabric_meters}</TableCell>
+                                  <TableCell>{item.cost_per_meter}</TableCell>
+                                  <TableCell>{item.stitching_cost}</TableCell>
+                                  <TableCell>
+                                    {item.embellishment_cost}
+                                  </TableCell>
+                                  <TableCell>{item.description}</TableCell>
+                                </TableRow>
+                              ))}
+                            </TableBody>
+                          </Table>
                         </CardContent>
                       </Card>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-muted-foreground">
-                    No orders available for this client.
-                  </p>
+                  <p>No orders for this client.</p>
                 )}
-                <Button
-                  className="mt-4"
-                  onClick={() => setIsNewOrderModalOpen(true)}
-                >
-                  Create New Order
-                </Button>
               </CardContent>
             </Card>
           )}
         </ScrollArea>
       </div>
-
       <NewClientModal
         isOpen={isNewClientModalOpen}
         onClose={() => setIsNewClientModalOpen(false)}
-        //@ts-ignore
-        onSubmit={async (clientData: ClientData) => {
-          await handleNewClientSubmit(clientData);
-        }}
+        onSubmit={handleNewClientSubmit}
       />
-
-      <NewOrderModal
-        isOpen={isNewOrderModalOpen}
-        onClose={() => setIsNewOrderModalOpen(false)}
-        onSubmit={handleNewOrderSubmit}
-        client_id={selectedClient?.client_id}
-      />
+      {selectedClient && (
+        <NewOrderModal
+          isOpen={isNewOrderModalOpen}
+          client_id={selectedClient.client_id}
+          onClose={() => setIsNewOrderModalOpen(false)}
+          onSubmit={handleNewOrderSubmit}
+        />
+      )}
     </div>
   );
 }
 
-function OrderDetail({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <p className="text-sm text-muted-foreground">{label}</p>
-      <p className="text-lg font-medium">{value}</p>
-    </div>
-  );
-}
+const OrderDetail = ({ label, value }: { label: string; value: string }) => (
+  <div className="flex justify-between">
+    <span className="font-semibold">{label}:</span>
+    <span>{value}</span>
+  </div>
+);
 
 export default ClientManagementPage;

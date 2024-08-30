@@ -65,7 +65,7 @@ export default function ClientList({
                     onClick={() => onSelect(client)}
                   >
                     <span className="truncate">
-                      {client.client_name} - {client.location_of_event}
+                      {client.name} - {client.location_of_event}
                     </span>
                   </Button>
                 </li>
