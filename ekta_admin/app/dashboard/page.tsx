@@ -62,6 +62,11 @@ const convertToUSD = (amountInINR: string, conversionRate: number = 82) => {
   return (amount / conversionRate).toFixed(2);
 };
 
+function formatCurrency(value: string) {
+  const numericValue = parseFloat(value);
+  if (isNaN(numericValue)) return value;
+  return `₹${numericValue.toFixed(2)}`;
+}
 const formatDate = (dateString: string): string => {
   const date = new Date(dateString);
   return date.toLocaleDateString("en-US", {
@@ -342,25 +347,29 @@ function ClientManagementPage() {
                           <Table className="w-full">
                             <TableHeader>
                               <TableRow>
+                                <TableHead>Description</TableHead>
                                 <TableHead>Fabric Source</TableHead>
                                 <TableHead>Fabric Meters</TableHead>
                                 <TableHead>Cost per Meter</TableHead>
                                 <TableHead>Stitching Cost</TableHead>
                                 <TableHead>Embellishment Cost</TableHead>
-                                <TableHead>Description</TableHead>
                               </TableRow>
                             </TableHeader>
                             <TableBody>
                               {order.items.map((item, index) => (
                                 <TableRow key={index}>
+                                  <TableCell>{item.description}</TableCell>
                                   <TableCell>{item.fabric_source}</TableCell>
                                   <TableCell>{item.fabric_meters}</TableCell>
-                                  <TableCell>{item.cost_per_meter}</TableCell>
-                                  <TableCell>{item.stitching_cost}</TableCell>
                                   <TableCell>
-                                    {item.embellishment_cost}
+                                    {formatCurrency(item.cost_per_meter)}
                                   </TableCell>
-                                  <TableCell>{item.description}</TableCell>
+                                  <TableCell>
+                                    {formatCurrency(item.stitching_cost)}
+                                  </TableCell>
+                                  <TableCell>
+                                    {formatCurrency(item.embellishment_cost)}
+                                  </TableCell>
                                 </TableRow>
                               ))}
                             </TableBody>
