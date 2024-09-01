@@ -79,7 +79,7 @@ export async function GET(request: Request) {
 
     // Transform results into a nested structure with clients and their orders
     const clients = result.rows.reduce((acc, row) => {
-      const clientIndex = acc.findIndex((c) => c.client_id === row.client_id);
+      const clientIndex = acc.findIndex((c: { client_id: any; }) => c.client_id === row.client_id);
       const order = row.order_id ? {
         id: row.order_id,
         client_name: row.client_name,
@@ -110,7 +110,7 @@ export async function GET(request: Request) {
           orders: order ? [order] : [], // Initialize orders array, only add if order exists
         });
       } else if (order) {
-        const existingOrderIndex = acc[clientIndex].orders.findIndex((o) => o.id === order.id);
+        const existingOrderIndex = acc[clientIndex].orders.findIndex((o: { id: any; }) => o.id === order.id);
         
         if (existingOrderIndex === -1) {
           acc[clientIndex].orders.push(order);
@@ -132,10 +132,14 @@ export async function GET(request: Request) {
 
     return NextResponse.json(clients);
   } catch (error) {
-    console.error('Failed to fetch clients with orders:', error);
-    return NextResponse.json(
-      { error: 'Failed to fetch clients with orders', details: error.message },
-      { status: 500 }
-    );
+    console.error('Failed to get clients:', error);
+    
+    // Provide more detailed error information
+    let errorMessage = 'Failed to get clients';
+    if (error instanceof Error) {
+      errorMessage += ': ' + error.message;
+    }
+
+    return NextResponse.json({ error: errorMessage }, { status: 500 });
   }
 }

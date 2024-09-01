@@ -1,11 +1,11 @@
 // pages/board.tsx
 "use client";
 import React, { useEffect, useState } from "react";
-import { DragDropContext, Droppable, Draggable } from "react-beautiful-dnd";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 interface KanbanOrder {
   id: string;
+  client_name: string;
   item_name: string;
   status: string;
   date_needed: string;
@@ -15,7 +15,6 @@ interface KanbanOrder {
 
 const Board: React.FC = () => {
   const [orders, setOrders] = useState<KanbanOrder[]>([]);
-  const columns = ["not_started", "in_progress", "done"];
 
   // Fetch data from the API
   useEffect(() => {
@@ -25,18 +24,13 @@ const Board: React.FC = () => {
         const data = await response.json();
         console.log("Fetched data:", data); // Debugging log
 
-        // Verify the structure of data
-        if (!Array.isArray(data)) {
-          console.error("Unexpected data structure:", data);
-          return;
-        }
-
         // Flatten all orders from the clients
         const allOrders = data.flatMap((client: any) =>
           client.orders
             ? client.orders.map((order: any) => ({
                 id: order.id,
                 item_name: order.item_name,
+                client_name: order.client_name,
                 status: order.status || "not_started", // Default to "not_started"
                 date_needed: order.date_needed,
                 date_of_event: order.date_of_event,
@@ -56,80 +50,126 @@ const Board: React.FC = () => {
     fetchOrders();
   }, []);
 
-  // Handle drag and drop functionality
-  const onDragEnd = (result: any) => {
-    if (!result.destination) return;
+  // Helper function to check if the date is within a week
+  const isDateNeededSoon = (dateNeeded: string) => {
+    const date = new Date(dateNeeded);
+    const today = new Date();
+    const diffInDays = Math.ceil(
+      (date.getTime() - today.getTime()) / (1000 * 60 * 60 * 24)
+    );
+    return diffInDays <= 7 && diffInDays >= 0; // Within a week from today
+  };
 
-    const updatedOrders = [...orders];
-    const [movedOrder] = updatedOrders.splice(result.source.index, 1);
-    movedOrder.status = result.destination.droppableId;
-    updatedOrders.splice(result.destination.index, 0, movedOrder);
+  // Function to sort orders by date_needed in descending order (most recent first)
+  const sortByDateNeeded = (orders: KanbanOrder[]) => {
+    return orders.sort(
+      (a, b) =>
+        new Date(b.date_needed).getTime() - new Date(a.date_needed).getTime()
+    );
+  };
 
-    setOrders(updatedOrders);
-    // Optionally, update the order status in the backend if needed.
+  // Group and sort orders by status
+  const ordersByStatus = {
+    not_started: sortByDateNeeded(
+      orders.filter((order) => order.status === "not_started")
+    ),
+    in_progress: sortByDateNeeded(
+      orders.filter((order) => order.status === "in_progress")
+    ),
+    completed: sortByDateNeeded(
+      orders.filter((order) => order.status === "completed")
+    ),
   };
 
   return (
-    <DragDropContext onDragEnd={onDragEnd}>
-      <div className="flex gap-4">
-        {columns.map((column) => (
-          <Droppable key={column} droppableId={column}>
-            {(provided) => (
-              <div
-                {...provided.droppableProps}
-                ref={provided.innerRef}
-                className=" p-4 rounded-lg w-1/3 min-h-[200px]"
-              >
-                <h2 className="text-lg font-semibold mb-4 capitalize">
-                  {column.replace("_", " ")}
-                </h2>
-                {orders
-                  .filter((order) => order.status === column)
-                  .sort(
-                    (a, b) =>
-                      new Date(a.date_needed).getTime() -
-                      new Date(b.date_needed).getTime()
-                  )
-                  .map((order, index) => (
-                    <Draggable
-                      key={order.id}
-                      draggableId={order.id.toString()}
-                      index={index}
-                    >
-                      {(provided) => (
-                        <Card
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="mb-4"
-                        >
-                          <CardHeader>
-                            <CardTitle>{order.item_name}</CardTitle>
-                          </CardHeader>
-                          <CardContent>
-                            <p>
-                              Date Needed:{" "}
-                              {new Date(order.date_needed).toLocaleDateString()}
-                            </p>
-                            <p>
-                              Event Date:{" "}
-                              {new Date(
-                                order.date_of_event
-                              ).toLocaleDateString()}
-                            </p>
-                            <p>Total Cost: ${order.total_cost}</p>
-                          </CardContent>
-                        </Card>
-                      )}
-                    </Draggable>
-                  ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
+    <div className="p-4 grid grid-cols-1 justify-center  w-full md:grid-cols-3 gap-4">
+      {/* Column for Not Started */}
+      <div>
+        <h2 className="font-bold text-lg text-center items-left mb-2">
+          Not Started
+        </h2>
+        {ordersByStatus.not_started.map((order) => (
+          <Card
+            key={order.id}
+            className={`shadow-md rounded-lg  mb-4 ${
+              isDateNeededSoon(order.date_needed)
+                ? "border-red-500 border-2"
+                : ""
+            }`}
+          >
+            <CardHeader>
+              <CardTitle>{order.item_name}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Client Name: {order.client_name}</p>
+              <p>
+                Date Needed: {new Date(order.date_needed).toLocaleDateString()}
+              </p>
+              <p>
+                Event Date: {new Date(order.date_of_event).toLocaleDateString()}
+              </p>
+              <p>Total Cost: ${order.total_cost}</p>
+            </CardContent>
+          </Card>
         ))}
       </div>
-    </DragDropContext>
+
+      {/* Column for In Progress */}
+      <div>
+        <h2 className="font-bold text-center text-lg mb-2">In Progress</h2>
+        {ordersByStatus.in_progress.map((order) => (
+          <Card
+            key={order.id}
+            className={`shadow-md rounded-lg p-4 mb-4 ${
+              isDateNeededSoon(order.date_needed)
+                ? "border-red-500 border-2"
+                : ""
+            }`}
+          >
+            <CardHeader>
+              <CardTitle>{order.item_name}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>
+                Date Needed: {new Date(order.date_needed).toLocaleDateString()}
+              </p>
+              <p>
+                Event Date: {new Date(order.date_of_event).toLocaleDateString()}
+              </p>
+              <p>Total Cost: ${order.total_cost}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      {/* Column for Completed */}
+      <div>
+        <h2 className="font-bold text-lg text-center mb-2">Completed</h2>
+        {ordersByStatus.completed.map((order) => (
+          <Card
+            key={order.id}
+            className={`shadow-md rounded-lg p-4 mb-4 ${
+              isDateNeededSoon(order.date_needed)
+                ? "border-red-500 border-2"
+                : ""
+            }`}
+          >
+            <CardHeader>
+              <CardTitle>{order.item_name}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>
+                Date Needed: {new Date(order.date_needed).toLocaleDateString()}
+              </p>
+              <p>
+                Event Date: {new Date(order.date_of_event).toLocaleDateString()}
+              </p>
+              <p>Total Cost: ${order.total_cost}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    </div>
   );
 };
 
