@@ -3,21 +3,21 @@ import { sql } from '@vercel/postgres';
 
 export async function POST(request: Request) {
   try {
-    const { name, phone_number, address, date_needed, date_of_event, location_of_event } = await request.json();
+    const { name, phone_number, address, location_of_event } = await request.json();
 
     // Log received data for debugging
-    console.log("Received client data:", { name, phone_number, address, date_needed, date_of_event, location_of_event });
+    console.log("Received client data:", { name, phone_number, address, location_of_event });
 
     // Validate the input
-    if (!name || !phone_number || !address || !date_needed || !date_of_event || !location_of_event) {
+    if (!name || !phone_number || !address || !location_of_event) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
     }
 
     // Insert the new client into the database
     const result = await sql`
-      INSERT INTO clients (name, phone_number, address, date_needed, date_of_event, location_of_event)
-      VALUES (${name}, ${phone_number}, ${address}, ${date_needed}, ${date_of_event}, ${location_of_event})
-      RETURNING id, name, phone_number, address, date_needed, date_of_event, location_of_event
+      INSERT INTO clients (name, phone_number, address, location_of_event)
+      VALUES (${name}, ${phone_number}, ${address}, ${location_of_event})
+      RETURNING id, name, phone_number, address, location_of_event
     `;
 
     // Log the result for debugging

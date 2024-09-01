@@ -31,7 +31,8 @@ interface Client {
 interface Order {
   id: string; // Assuming this is an identifier
   client_name: string; // Client's name
-  date: string; // Date in ISO format
+  date_needed: string; // Date needed as a string
+  date_of_event: string; // Date of the event as a string
   item_name: string; // Name of the item
   total_cost: string; // Total cost as a string
   items: Array<{
@@ -42,6 +43,7 @@ interface Order {
     embellishment_cost: string; // Embellishment cost as a string
     description: string; // Description of the item
   }>;
+
   tailor_name: string; // Tailor's name
   additional_embellishments: string; // In the JSON, this field may be represented as a string, e.g., "No"
 }
@@ -242,12 +244,6 @@ function ClientManagementPage() {
             throw new Error("Function not implemented.");
           }}
         />
-        <Button
-          onClick={() => setIsNewClientModalOpen(true)}
-          className="mt-4 w-full"
-        >
-          <FaPlus className="mr-2" /> Add New Client
-        </Button>
       </div>
       <div className="flex-1 p-4">
         <ScrollArea className="h-full">
@@ -309,7 +305,11 @@ function ClientManagementPage() {
                             />
                             <OrderDetail
                               label="Date Needed"
-                              value={formatDate(order.date)}
+                              value={formatDate(order.date_needed)}
+                            />
+                            <OrderDetail
+                              label="Date Of Event"
+                              value={formatDate(order.date_of_event)}
                             />
                           </div>
 
@@ -354,6 +354,7 @@ function ClientManagementPage() {
       <NewClientModal
         isOpen={isNewClientModalOpen}
         onClose={() => setIsNewClientModalOpen(false)}
+        //@ts-ignore
         onSubmit={handleNewClientSubmit}
       />
       {selectedClient && (

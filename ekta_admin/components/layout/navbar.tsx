@@ -32,6 +32,9 @@ export default function Navbar() {
               Client Dashboard
             </span>
           </Link>
+          <Link href="/board" className="flex items-center">
+            <span className="overflow-auto  leading-tight ">Orders</span>
+          </Link>
           <Link href="/costumes" className="flex items-center">
             <span className="overflow-auto  leading-tight ">Costumes</span>
           </Link>

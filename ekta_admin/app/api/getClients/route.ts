@@ -15,13 +15,12 @@ export async function GET(request: Request) {
           c.name,
           c.phone_number,
           c.address,
-          c.date_needed,
-          c.date_of_event,
           c.location_of_event,
           o.id AS order_id,
           o.client_name,
-          o.date AS order_date,
           o.item_name,
+          o.date_of_event,
+          o.date_needed,
           o.tailor_name,
           o.total_cost,
           i.id AS item_id,
@@ -49,14 +48,13 @@ export async function GET(request: Request) {
           c.name,
           c.phone_number,
           c.address,
-          c.date_needed,
-          c.date_of_event,
           c.location_of_event,
           o.id AS order_id,
           o.client_name,
-          o.date AS order_date,
           o.item_name,
           o.tailor_name,
+          o.date_of_event,
+          o.date_needed,
           o.total_cost,
           i.id AS item_id,
           i.fabric_source,
@@ -81,12 +79,13 @@ export async function GET(request: Request) {
 
     // Transform results into a nested structure with clients and their orders
     const clients = result.rows.reduce((acc, row) => {
-      const clientIndex = acc.findIndex((c: { client_id: any; }) => c.client_id === row.client_id);
+      const clientIndex = acc.findIndex((c) => c.client_id === row.client_id);
       const order = row.order_id ? {
         id: row.order_id,
         client_name: row.client_name,
-        date: row.order_date,
         item_name: row.item_name,
+        date_of_event: row.date_of_event,
+        date_needed: row.date_needed,
         tailor_name: row.tailor_name,
         total_cost: row.total_cost,
         items: row.item_id ? [{
@@ -107,13 +106,11 @@ export async function GET(request: Request) {
           name: row.name,  // Directly using 'name'
           phone_number: row.phone_number,
           address: row.address,
-          date_needed: row.date_needed,
-          date_of_event: row.date_of_event,
           location_of_event: row.location_of_event,
           orders: order ? [order] : [], // Initialize orders array, only add if order exists
         });
       } else if (order) {
-        const existingOrderIndex = acc[clientIndex].orders.findIndex((o: { id: any; }) => o.id === order.id);
+        const existingOrderIndex = acc[clientIndex].orders.findIndex((o) => o.id === order.id);
         
         if (existingOrderIndex === -1) {
           acc[clientIndex].orders.push(order);
@@ -135,18 +132,10 @@ export async function GET(request: Request) {
 
     return NextResponse.json(clients);
   } catch (error) {
-    // Type-check the error to ensure it's an instance of Error
-    if (error instanceof Error) {
-      return NextResponse.json(
-        { error: 'Failed to fetch clients with orders', details: error.message },
-        { status: 500 }
-      );
-    } else {
-      // Handle the case where the error is not an instance of Error
-      return NextResponse.json(
-        { error: 'An unknown error occurred', details: 'No error details available' },
-        { status: 500 }
-      );
-    }
+    console.error('Failed to fetch clients with orders:', error);
+    return NextResponse.json(
+      { error: 'Failed to fetch clients with orders', details: error.message },
+      { status: 500 }
+    );
   }
 }

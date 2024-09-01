@@ -51,14 +51,15 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
   const [newOrder, setNewOrder] = useState({
     client_name: "",
     client_id: "",
-    date: "",
+    date_needed: "",
+    date_of_event: "",
     item_name: "",
     tailor_name: "",
+    status: "Pending",
   });
   const [items, setItems] = useState<Item[]>([]);
   const [isItemModalOpen, setIsItemModalOpen] = useState(false);
 
-  // Update client_id in state whenever client_id prop changes
   useEffect(() => {
     if (client_id) {
       setNewOrder((prev) => ({ ...prev, client_id }));
@@ -79,7 +80,8 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
 
     if (
       !newOrder.client_name ||
-      !newOrder.date ||
+      !newOrder.date_needed ||
+      !newOrder.date_of_event ||
       !newOrder.item_name ||
       items.length === 0
     ) {
@@ -100,9 +102,11 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
     setNewOrder({
       client_name: "",
       client_id: "",
-      date: "",
+      date_needed: "",
+      date_of_event: "",
       item_name: "",
       tailor_name: "",
+      status: "Pending",
     });
     setItems([]);
   };
@@ -153,14 +157,28 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
               </Select>
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="date" className="text-right">
-                Date
+              <Label htmlFor="date_needed" className="text-right">
+                Date Needed
               </Label>
               <Input
-                id="date"
-                name="date"
+                id="date_needed"
+                name="date_needed"
                 type="date"
-                value={newOrder.date}
+                value={newOrder.date_needed}
+                onChange={handleChange}
+                className="col-span-3"
+                required
+              />
+            </div>
+            <div className="grid grid-cols-4 items-center gap-4">
+              <Label htmlFor="date_of_event" className="text-right">
+                Date of Event
+              </Label>
+              <Input
+                id="date_of_event"
+                name="date_of_event"
+                type="date"
+                value={newOrder.date_of_event}
                 onChange={handleChange}
                 className="col-span-3"
                 required

@@ -22,8 +22,6 @@ interface ClientData {
   name: string;
   phone_number: string;
   address: string;
-  date_needed: string;
-  date_of_event: string;
   location_of_event: string;
 }
 
@@ -36,8 +34,6 @@ const NewClientModal: React.FC<NewClientModalProps> = ({
     name: "",
     phone_number: "",
     address: "",
-    date_needed: "",
-    date_of_event: "",
     location_of_event: "",
   });
 
@@ -53,8 +49,6 @@ const NewClientModal: React.FC<NewClientModalProps> = ({
       name: "",
       phone_number: "",
       address: "",
-      date_needed: "",
-      date_of_event: "",
       location_of_event: "",
     });
   };
@@ -77,6 +71,7 @@ const NewClientModal: React.FC<NewClientModalProps> = ({
                 value={newClient.name}
                 onChange={handleChange}
                 className="col-span-3"
+                required
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -89,6 +84,7 @@ const NewClientModal: React.FC<NewClientModalProps> = ({
                 value={newClient.phone_number}
                 onChange={handleChange}
                 className="col-span-3"
+                required
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -101,32 +97,7 @@ const NewClientModal: React.FC<NewClientModalProps> = ({
                 value={newClient.address}
                 onChange={handleChange}
                 className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="date_needed" className="text-right">
-                Shipment Date
-              </Label>
-              <Input
-                id="date_needed"
-                name="date_needed"
-                type="date"
-                value={newClient.date_needed}
-                onChange={handleChange}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <Label htmlFor="date_of_event" className="text-right">
-                Event Date
-              </Label>
-              <Input
-                id="date_of_event"
-                name="date_of_event"
-                type="date"
-                value={newClient.date_of_event}
-                onChange={handleChange}
-                className="col-span-3"
+                required
               />
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
@@ -139,6 +110,7 @@ const NewClientModal: React.FC<NewClientModalProps> = ({
                 value={newClient.location_of_event}
                 onChange={handleChange}
                 className="col-span-3"
+                required
               />
             </div>
           </div>

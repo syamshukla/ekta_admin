@@ -43,10 +43,7 @@ export default function ClientList({
       <CardContent className="p-6">
         <div className="flex flex-col items-center justify-between mb-6">
           <h2 className="text-2xl font-semibold mb-4">Point of Contacts</h2>
-          <Button
-            variant="outline"
-            onClick={() => setIsNewClientModalOpen(true)}
-          >
+          <Button onClick={() => setIsNewClientModalOpen(true)}>
             Add New POC
           </Button>
         </div>
@@ -59,8 +56,8 @@ export default function ClientList({
                     variant="ghost"
                     className={`w-full justify-start text-left ${
                       selectedClient?.id === client.id
-                        ? "bg-primary text-primary-foreground"
-                        : ""
+                        ? "   text-foreground"
+                        : " text-foregroud"
                     }`}
                     onClick={() => onSelect(client)}
                   >

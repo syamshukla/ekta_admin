@@ -8,20 +8,26 @@ export async function POST(request: Request) {
 
     const {
       client_id,
-      date,
+      client_name,
+      date_needed,
+      date_of_event,
       item_name,
       tailor_name,
       total_cost,
+      status,
       items
     } = data;
 
     // Validate the input
     if (
       !client_id ||
-      !date ||
+      !client_name ||
+      !date_needed ||
+      !date_of_event ||
       !item_name ||
       !tailor_name ||
       !total_cost ||
+      !status ||
       !items || items.length === 0
     ) {
       return NextResponse.json({ error: 'Missing or invalid required fields' }, { status: 400 });
@@ -33,8 +39,26 @@ export async function POST(request: Request) {
     try {
       // Insert the new order into the database
       const orderResult = await sql`
-        INSERT INTO orders (client_id, client_name, date, item_name, tailor_name, total_cost)
-        VALUES (${client_id}, ${data.client_name || null}, ${date}, ${item_name}, ${tailor_name}, ${total_cost})
+        INSERT INTO orders (
+          client_id, 
+          client_name, 
+          date_needed, 
+          date_of_event, 
+          item_name, 
+          tailor_name, 
+          total_cost,
+          status
+        )
+        VALUES (
+          ${client_id}, 
+          ${client_name}, 
+          ${date_needed}, 
+          ${date_of_event}, 
+          ${item_name}, 
+          ${tailor_name}, 
+          ${total_cost},
+          ${status}
+        )
         RETURNING id
       `;
 
@@ -43,8 +67,24 @@ export async function POST(request: Request) {
       // Insert items into the items table
       for (const item of items) {
         await sql`
-          INSERT INTO items (order_id, fabric_source, fabric_meters, cost_per_meter, stitching_cost, embellishment_cost, description)
-          VALUES (${orderId}, ${item.fabric_source}, ${item.fabric_meters}, ${item.cost_per_meter}, ${item.stitching_cost}, ${item.embellishment_cost}, ${item.description})
+          INSERT INTO items (
+            order_id, 
+            fabric_source, 
+            fabric_meters, 
+            cost_per_meter, 
+            stitching_cost, 
+            embellishment_cost, 
+            description
+          )
+          VALUES (
+            ${orderId}, 
+            ${item.fabric_source}, 
+            ${item.fabric_meters}, 
+            ${item.cost_per_meter}, 
+            ${item.stitching_cost}, 
+            ${item.embellishment_cost}, 
+            ${item.description}
+          )
         `;
       }
 
