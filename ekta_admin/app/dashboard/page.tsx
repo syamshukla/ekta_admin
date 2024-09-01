@@ -97,6 +97,23 @@ function ClientManagementPage() {
     fetchClients();
   }, [selectedClient, isNewClientModalOpen, isNewOrderModalOpen, deleteOrder]);
 
+  const handleDeleteClient = async (clientId: string) => {
+    try {
+      const response = await fetch(`/api/deleteClient/${clientId}`, {
+        method: "DELETE",
+      });
+      const result = await response.json();
+
+      if (response.ok) {
+        toast.success("Client deleted successfully.");
+        setSelectedClient(null); // Clear selected client
+      } else {
+        toast.error(result.error || "Failed to delete client.");
+      }
+    } catch (error) {
+      toast.error("Failed to delete client.");
+    }
+  };
   const handleUpdate = async (orderId: string, updatedData: Partial<Order>) => {
     try {
       const response = await fetch(`/api/updateOrder`, {
@@ -224,16 +241,14 @@ function ClientManagementPage() {
   };
 
   return (
-    <div className="flex h-[calc(100vh-64px)]  pt-16">
+    <div className="flex h-[calc(100vh-64px)] pt-16">
       <div className="w-1/3 p-4 border-r">
         <ClientList
           clients={clients}
           onSelect={setSelectedClient}
           selectedClient={selectedClient}
           setIsNewClientModalOpen={setIsNewClientModalOpen}
-          setIsNewOrderModalOpen={function (open: boolean): void {
-            throw new Error("Function not implemented.");
-          }}
+          setIsNewOrderModalOpen={setIsNewOrderModalOpen}
           isNewClientModalOpen={false}
           handleNewClientChange={function (
             event: React.ChangeEvent<HTMLInputElement>
@@ -254,12 +269,23 @@ function ClientManagementPage() {
                   <CardTitle className="text-2xl font-semibold">
                     Orders for {selectedClient.name}
                   </CardTitle>
-                  <Button
-                    onClick={() => setIsNewOrderModalOpen(true)}
-                    className="flex items-center gap-2"
-                  >
-                    <FaPlus /> Add New Order
-                  </Button>
+                  <div className="flex items-center space-x-2">
+                    <Button
+                      onClick={() => setIsNewOrderModalOpen(true)}
+                      className="flex items-center gap-2"
+                    >
+                      <FaPlus /> Add New Order
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="w-8 h-8 p-0 flex items-center justify-center"
+                      onClick={() =>
+                        handleDeleteClient(selectedClient.client_id)
+                      }
+                    >
+                      <FaTrash className="text-red-500" />
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>

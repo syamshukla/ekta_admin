@@ -38,9 +38,6 @@ export default function Navbar() {
           <Link href="/costumes" className="flex items-center">
             <span className="overflow-auto  leading-tight ">Costumes</span>
           </Link>
-          <Link href="/providers" className="flex items-center">
-            <span className="overflow-auto  leading-tight ">Providers</span>
-          </Link>
         </div>
         <ModeToggle />
       </nav>
