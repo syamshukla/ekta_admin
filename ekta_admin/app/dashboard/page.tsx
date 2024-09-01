@@ -335,7 +335,7 @@ function ClientManagementPage() {
                               value={order.tailor_name}
                             />
                             <OrderDetail
-                              label="Date Needed"
+                              label="Shipment Date"
                               value={formatDate(order.date_needed)}
                             />
                             <OrderDetail

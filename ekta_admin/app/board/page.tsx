@@ -103,7 +103,8 @@ const Board: React.FC = () => {
             <CardContent>
               <p>Client Name: {order.client_name}</p>
               <p>
-                Date Needed: {new Date(order.date_needed).toLocaleDateString()}
+                Shipment Date:{" "}
+                {new Date(order.date_needed).toLocaleDateString()}
               </p>
               <p>
                 Event Date: {new Date(order.date_of_event).toLocaleDateString()}
@@ -131,7 +132,8 @@ const Board: React.FC = () => {
             </CardHeader>
             <CardContent>
               <p>
-                Date Needed: {new Date(order.date_needed).toLocaleDateString()}
+                Shipment Date:{" "}
+                {new Date(order.date_needed).toLocaleDateString()}
               </p>
               <p>
                 Event Date: {new Date(order.date_of_event).toLocaleDateString()}
@@ -159,7 +161,8 @@ const Board: React.FC = () => {
             </CardHeader>
             <CardContent>
               <p>
-                Date Needed: {new Date(order.date_needed).toLocaleDateString()}
+                Shipment Date:{" "}
+                {new Date(order.date_needed).toLocaleDateString()}
               </p>
               <p>
                 Event Date: {new Date(order.date_of_event).toLocaleDateString()}

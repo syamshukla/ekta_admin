@@ -158,7 +158,7 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
             </div>
             <div className="grid grid-cols-4 items-center gap-4">
               <Label htmlFor="date_needed" className="text-right">
-                Date Needed
+                Shipment Date
               </Label>
               <Input
                 id="date_needed"
@@ -203,17 +203,18 @@ const NewOrderModal: React.FC<NewOrderModalProps> = ({
             <Table>
               <TableHeader>
                 <TableRow>
+                  <TableHead>Description</TableHead>
                   <TableHead>Fabric Source</TableHead>
                   <TableHead>Fabric Meters</TableHead>
                   <TableHead>Cost per Meter</TableHead>
                   <TableHead>Stitching Cost</TableHead>
                   <TableHead>Embellishment Cost</TableHead>
-                  <TableHead>Description</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {items.map((item, index) => (
                   <TableRow key={index}>
+                    <TableCell>{item.description}</TableCell>
                     <TableCell>{item.fabric_source}</TableCell>
                     <TableCell>{item.fabric_meters}</TableCell>
                     <TableCell>{item.cost_per_meter}</TableCell>
